@@ -8,10 +8,10 @@ import (
 
 func ExampleReadConfig() {
 
-	config, _ := ReadConfig("../../../config/config.json")
+	config, _ := ReadConfig("./../../../config/config.json")
 
 	fmt.Println(config)
-	//Output: {:9091 localhost}
+	//Output: {:9091 localhost recipebox.db}
 }
 
 func TestReadConfig(t *testing.T) {
@@ -24,7 +24,7 @@ func TestReadConfig(t *testing.T) {
 		t.Error("Failing")
 	}
 
-	c := &Configuration{":9091", "localhost"}
+	c := &Configuration{":9091", "localhost", "recipebox.db"}
 
 	assert.ObjectsAreEqual(c, config)
 }

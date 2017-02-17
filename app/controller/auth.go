@@ -7,7 +7,6 @@ import (
 	"github.com/adelowo/RecipeBox/app/common/template"
 	"github.com/adelowo/RecipeBox/app/model"
 	v "github.com/asaskevich/govalidator"
-	"github.com/gorilla/csrf"
 	h "html/template"
 	"log"
 	"net/http"
@@ -226,10 +225,6 @@ func postSignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/", http.StatusFound)
-}
-
-func getCsrfTemplate(r *http.Request) h.HTML {
-	return csrf.TemplateField(r)
 }
 
 func sendSignUpFailureResponse(w http.ResponseWriter, r *http.Request, e *error.ValidatorErrorBag) {

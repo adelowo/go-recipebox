@@ -2,12 +2,14 @@ package controller
 
 import (
 	"github.com/adelowo/RecipeBox/app/common/error"
+	"github.com/adelowo/RecipeBox/app/common/hasher"
 	"github.com/adelowo/RecipeBox/app/common/session"
 	"github.com/adelowo/RecipeBox/app/common/template"
 	"github.com/adelowo/RecipeBox/app/model"
 	v "github.com/asaskevich/govalidator"
 	"github.com/gorilla/csrf"
 	h "html/template"
+	"log"
 	"net/http"
 )
 
@@ -59,8 +61,10 @@ func postLogin(w http.ResponseWriter, r *http.Request) {
 
 	//Validate
 
-	if email != "" && !v.IsEmail(email) {
-		validatorErrorBag.Add("email", "Please provide a valid email address")
+	if email != "" {
+		if !v.IsEmail(email) {
+			validatorErrorBag.Add("email", "Please provide a valid email address")
+		}
 	} else {
 		validatorErrorBag.Add("email", "Please provide an email address")
 	}
@@ -70,9 +74,47 @@ func postLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validatorErrorBag.Count() != 0 {
-		//		sendSignUpFailureResponse(w, r, e)
+		sendLoginFailureResponse(w, r, validatorErrorBag)
+		return
 	}
 
+	currentUser, err := model.FindUserByEmail(email)
+
+	if err != nil {
+		validatorErrorBag.Add("password", "Invalid password/email combination")
+		sendLoginFailureResponse(w, r, validatorErrorBag)
+	}
+
+	bcryptHasher := hasher.NewBcryptHasher()
+
+	if bcryptHasher.Verify(currentUser.Password, password) {
+		sess, _ := session.GetSession(r, "user")
+
+		sess.Values["username"] = currentUser.Username
+		sess.Values["active"] = true
+
+		err := sess.Save(r, w)
+
+		if err != nil {
+			validatorErrorBag.Add("email", "An error occured while we try to log you in. Please try again")
+			sendLoginFailureResponse(w, r, validatorErrorBag)
+			return
+		}
+
+		log.Printf("%s just logged in \n", currentUser.Username)
+
+		http.Redirect(w, r, "/", http.StatusFound)
+
+		return
+
+	}
+
+	//Password verification failed.
+
+	validatorErrorBag.Add("password", "Invalid email/password. Try again")
+
+	sendLoginFailureResponse(w, r, validatorErrorBag)
+	return
 }
 
 func getLogin(w http.ResponseWriter, r *http.Request) {
@@ -81,15 +123,6 @@ func getLogin(w http.ResponseWriter, r *http.Request) {
 	p := template.NewPageStruct("Login to edit your recipeboard")
 
 	template.LoginTemplate.Execute(w, withLoginErrorStruct(csrfField, p, error.NewValidatorErrorBag()))
-}
-
-//Haha, i see why everyone wants generics
-func withLoginErrorStruct(c h.HTML, p template.Page, eb *error.ValidatorErrorBag) loginError {
-	password, _ := eb.Get("password")
-	email, _ := eb.Get("email")
-
-	return loginError{template.NewPageWithFormStruct(p, c), email, password}
-
 }
 
 func Signup(w http.ResponseWriter, r *http.Request) {
@@ -195,6 +228,10 @@ func postSignUp(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
+func getCsrfTemplate(r *http.Request) h.HTML {
+	return csrf.TemplateField(r)
+}
+
 func sendSignUpFailureResponse(w http.ResponseWriter, r *http.Request, e *error.ValidatorErrorBag) {
 	w.WriteHeader(http.StatusFound)
 	csrfField := getCsrfTemplate(r)
@@ -205,8 +242,15 @@ func sendSignUpFailureResponse(w http.ResponseWriter, r *http.Request, e *error.
 
 }
 
-func getCsrfTemplate(r *http.Request) h.HTML {
-	return csrf.TemplateField(r)
+//Where did Generics go ?
+
+func sendLoginFailureResponse(w http.ResponseWriter, r *http.Request, eb *error.ValidatorErrorBag) {
+	w.WriteHeader(http.StatusFound)
+	csrfField := getCsrfTemplate(r)
+	p := template.NewPageStruct("Login to edit your recipeboard")
+
+	template.LoginTemplate.Execute(w, withLoginErrorStruct(csrfField, p, eb))
+
 }
 
 func withSignUpErrorStruct(c h.HTML, p template.Page, eb *error.ValidatorErrorBag) signUpError {
@@ -215,4 +259,13 @@ func withSignUpErrorStruct(c h.HTML, p template.Page, eb *error.ValidatorErrorBa
 	email, _ := eb.Get("email")
 
 	return signUpError{template.NewPageWithFormStruct(p, c), username, password, email}
+}
+
+//Again
+func withLoginErrorStruct(c h.HTML, p template.Page, eb *error.ValidatorErrorBag) loginError {
+	password, _ := eb.Get("password")
+	email, _ := eb.Get("email")
+
+	return loginError{template.NewPageWithFormStruct(p, c), email, password}
+
 }

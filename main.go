@@ -8,8 +8,10 @@ import (
 	_ "github.com/adelowo/RecipeBox/app/common/session"
 	"github.com/adelowo/RecipeBox/app/common/template"
 	"github.com/adelowo/RecipeBox/app/controller"
+	"github.com/adelowo/RecipeBox/app/middleware"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
+	"github.com/justinas/alice"
 	"log"
 	"net/http"
 	"os"
@@ -39,11 +41,15 @@ func main() {
 		panic(message)
 	}
 
-	template.ParseTemplates("auth/signup.html")
+	template.ParseTemplates("auth/signup.html", "auth/login.html")
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/", controller.Index).Methods("GET")
+	index := http.HandlerFunc(controller.Index)
+
+	r.Handle("/", alice.New(middleware.Auth).ThenFunc(index)).Methods("GET")
+
+	r.HandleFunc("/logout", controller.Logout).Methods("GET")
 
 	r.HandleFunc("/login", controller.Login).Methods("GET", "POST")
 

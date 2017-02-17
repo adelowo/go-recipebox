@@ -50,12 +50,35 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 func postLogin(w http.ResponseWriter, r *http.Request) {
 
+	validatorErrorBag := error.NewValidatorErrorBag()
+
+	r.ParseForm()
+
+	email := r.Form.Get("email")
+	password := r.Form.Get("password")
+
+	//Validate
+
+	if email != "" && !v.IsEmail(email) {
+		validatorErrorBag.Add("email", "Please provide a valid email address")
+	} else {
+		validatorErrorBag.Add("email", "Please provide an email address")
+	}
+
+	if password == "" {
+		validatorErrorBag.Add("password", "Please provide your password")
+	}
+
+	if validatorErrorBag.Count() != 0 {
+		//		sendSignUpFailureResponse(w, r, e)
+	}
+
 }
 
 func getLogin(w http.ResponseWriter, r *http.Request) {
 	csrfField := getCsrfTemplate(r)
 
-	p := template.NewPageStruct("Signup to own a RecipeBoard")
+	p := template.NewPageStruct("Login to edit your recipeboard")
 
 	template.LoginTemplate.Execute(w, withLoginErrorStruct(csrfField, p, error.NewValidatorErrorBag()))
 }
@@ -129,7 +152,7 @@ func postSignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if errorBag.Count() != 0 {
-		sendFailureResponse(w, r, errorBag)
+		sendSignUpFailureResponse(w, r, errorBag)
 		return
 	}
 
@@ -138,7 +161,7 @@ func postSignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if errorBag.Count() != 0 {
-		sendFailureResponse(w, r, errorBag)
+		sendSignUpFailureResponse(w, r, errorBag)
 		return
 	}
 
@@ -146,7 +169,7 @@ func postSignUp(w http.ResponseWriter, r *http.Request) {
 
 	if err := model.CreateUser(username, email, password); err != nil {
 		errorBag.Add("email", "An error occured while trying to save your details")
-		sendFailureResponse(w, r, errorBag)
+		sendSignUpFailureResponse(w, r, errorBag)
 		return
 	}
 
@@ -165,14 +188,14 @@ func postSignUp(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		errorBag.Add("email", "Your account have been registered but an error occured while trying to log you in. Please visit the login page to continue")
-		sendFailureResponse(w, r, errorBag)
+		sendSignUpFailureResponse(w, r, errorBag)
 		return
 	}
 
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func sendFailureResponse(w http.ResponseWriter, r *http.Request, e *error.ValidatorErrorBag) {
+func sendSignUpFailureResponse(w http.ResponseWriter, r *http.Request, e *error.ValidatorErrorBag) {
 	w.WriteHeader(http.StatusFound)
 	csrfField := getCsrfTemplate(r)
 

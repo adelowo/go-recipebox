@@ -16,6 +16,24 @@ type signUpError struct {
 	Username, Password, Email string
 }
 
+type loginError struct {
+	template.PageWithForm
+	Email, Password string
+}
+
+func Logout(w http.ResponseWriter, r *http.Request) {
+	session, err := session.GetSession(r, "user")
+
+	if err == nil {
+		delete(session.Values, "username")
+		delete(session.Values, "active")
+		session.Save(r, w)
+	}
+
+	http.Redirect(w, r, "/login", http.StatusFound)
+	return
+}
+
 func Login(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == "POST" {
@@ -35,6 +53,19 @@ func postLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func getLogin(w http.ResponseWriter, r *http.Request) {
+	csrfField := getCsrfTemplate(r)
+
+	p := template.NewPageStruct("Signup to own a RecipeBoard")
+
+	template.LoginTemplate.Execute(w, withLoginErrorStruct(csrfField, p, error.NewValidatorErrorBag()))
+}
+
+//Haha, i see why everyone wants generics
+func withLoginErrorStruct(c h.HTML, p template.Page, eb *error.ValidatorErrorBag) loginError {
+	password, _ := eb.Get("password")
+	email, _ := eb.Get("email")
+
+	return loginError{template.NewPageWithFormStruct(p, c), email, password}
 
 }
 
@@ -51,7 +82,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 
 func getSignUp(w http.ResponseWriter, r *http.Request) {
 
-	csrfField := csrf.TemplateField(r)
+	csrfField := getCsrfTemplate(r)
 
 	p := template.NewPageStruct("Signup to own a RecipeBoard")
 
@@ -143,12 +174,16 @@ func postSignUp(w http.ResponseWriter, r *http.Request) {
 
 func sendFailureResponse(w http.ResponseWriter, r *http.Request, e *error.ValidatorErrorBag) {
 	w.WriteHeader(http.StatusFound)
-	csrfField := csrf.TemplateField(r)
+	csrfField := getCsrfTemplate(r)
 
 	p := template.NewPageStruct("Signup to own a RecipeBoard")
 
 	template.SignUpTemplate.Execute(w, withSignUpErrorStruct(csrfField, p, e))
 
+}
+
+func getCsrfTemplate(r *http.Request) h.HTML {
+	return csrf.TemplateField(r)
 }
 
 func withSignUpErrorStruct(c h.HTML, p template.Page, eb *error.ValidatorErrorBag) signUpError {

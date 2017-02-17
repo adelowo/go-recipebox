@@ -18,6 +18,7 @@ func init() {
 	}
 
 	store = sessions.NewCookieStore([]byte(secret))
+
 }
 
 //Return a session instance from the session's Store Registry
@@ -27,8 +28,15 @@ func GetSession(r *http.Request, sessionName string) (*sessions.Session, error) 
 
 	if err != nil {
 		log.Println("Could not get store for the session")
-		log.Println("New session used instead")
+		log.Println(err.Error())
 	}
 
 	return session, err
+}
+
+func IsUserLoggedIn(r *http.Request) bool {
+
+	session, err := GetSession(r, "user")
+
+	return err == nil && session.Values["active"] == true && session.Values["username"] != ""
 }

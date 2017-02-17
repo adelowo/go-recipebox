@@ -10,6 +10,7 @@ func Auth(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !session.IsUserLoggedIn(r) {
 			http.Redirect(w, r, "/login", http.StatusFound)
+			return
 		}
 
 		h.ServeHTTP(w, r)

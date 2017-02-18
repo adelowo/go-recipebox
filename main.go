@@ -41,7 +41,7 @@ func main() {
 		panic(message)
 	}
 
-	template.ParseTemplates("auth/signup.html", "auth/login.html", "index.html", "add_recipe.html")
+	template.ParseTemplates("auth/signup.html", "auth/login.html", "index.html", "add_recipe.html", "recipes.html")
 
 	r := mux.NewRouter()
 
@@ -69,6 +69,12 @@ func main() {
 	saveRecipe := http.HandlerFunc(controller.SaveRecipe)
 
 	r.Handle("/recipes/create", authMiddleware.ThenFunc(saveRecipe)).Methods("POST")
+
+	deleteRecipeHandler := authMiddleware.Append(middleware.RecipeOwner).ThenFunc(http.HandlerFunc(controller.DeleteRecipe))
+
+	r.Handle("/recipes/{id:[0-9]+}", deleteRecipeHandler).Methods("POST")
+
+	r.Handle("/recipes", authMiddleware.ThenFunc(http.HandlerFunc(controller.ShowAllRecipes))).Methods("GET")
 
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 

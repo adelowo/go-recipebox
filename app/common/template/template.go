@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"io/ioutil"
 	"log"
-	"net/http"
 )
 
 var templatesParsed bool
@@ -13,7 +12,11 @@ var templatesParsed bool
 var templateHandler *template.Template
 
 var (
-	SignUpTemplate *template.Template
+	SignUpTemplate,
+	LoginTemplate,
+	HomeTemplate,
+	CreateRecipeTemplate,
+	AllRecipeTemplate *template.Template
 )
 
 func ParseTemplates(templates ...string) {
@@ -43,20 +46,13 @@ func ParseTemplates(templates ...string) {
 	templateHandler = template.Must(template.ParseFiles(allFiles...))
 
 	SignUpTemplate = lookTemplateUp("signup.html")
+	LoginTemplate = lookTemplateUp("login.html")
+	HomeTemplate = lookTemplateUp("index.html")
+	CreateRecipeTemplate = lookTemplateUp("add_recipe.html")
+	AllRecipeTemplate = lookTemplateUp("recipes.html")
 
 	templatesParsed = true
 
-}
-
-func RenderTemplate(w http.ResponseWriter, t string, data interface{}) {
-
-	err := templateHandler.ExecuteTemplate(w, t, data)
-
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(500)
-		log.Println("Something bad happened")
-	}
 }
 
 func lookTemplateUp(t string) *template.Template {

@@ -7,6 +7,7 @@ import (
 	"github.com/adelowo/RecipeBox/app/model"
 	h "html/template"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -20,6 +21,34 @@ type createRecipe struct {
 	template.PageWithForm
 	formData
 	TitleErr, DescriptionErr, IngredientsErr string //suffixed Titl since <PageWithForm> already has a Title field
+}
+
+type recipePage struct {
+	template.PageWithForm
+	Recipes model.RecipeBox
+}
+
+func ShowAllRecipes(w http.ResponseWriter, r *http.Request) {
+
+	sess, err := session.GetSession(r, "user")
+
+	if err != nil {
+		InternalError(w, err)
+		return
+	}
+
+	currentUser, err := model.FindUserByEmail(sess.Values["email"].(string))
+
+	if err != nil {
+		InternalError(w, err)
+		return
+	}
+
+	allRecipes, _ := model.FetchAllRecipesFor(currentUser)
+
+	p := template.NewPageStruct("View all of your recipes")
+
+	template.AllRecipeTemplate.Execute(w, recipePage{template.NewPageWithFormStruct(p, getCsrfTemplate(r)), allRecipes})
 }
 
 func AddRecipe(w http.ResponseWriter, r *http.Request) {
@@ -123,4 +152,20 @@ func sendCreateRecipeFailureResponse(w http.ResponseWriter, r *http.Request, eb 
 	formData := newFormDataStruct(r.Form.Get("title"), r.Form.Get("description"), r.Form.Get("ingredients"))
 
 	template.CreateRecipeTemplate.Execute(w, withCreateRecipeStruct(csrf, p, eb, formData))
+}
+
+func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
+
+	r.ParseForm()
+
+	id, _ := strconv.Atoi((r.Form.Get("id")))
+
+	err := model.DeleteRecipe(id)
+
+	if err != nil {
+		InternalError(w, err)
+	}
+
+	http.Redirect(w, r, "/recipes", http.StatusFound)
+
 }

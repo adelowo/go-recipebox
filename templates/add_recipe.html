@@ -1,0 +1,47 @@
+{{ template "_head.html" .Title }}
+
+
+<div id="app">
+	
+	<center>
+		<div class="alert alert-info">
+			Please fill in the form below in other to add a a new recipe to your board
+		</div>
+	</center>
+
+
+<div class="container">
+    <div class="rows">
+        <div class="col-lg-3"></div>
+        <div class="col-lg-6">
+                 <div class="form-group">
+                <form action="/recipes/create" method="POST">
+                <input type="text" name="title" class="form-control" value="{{.FormTitle}}">
+                {{ if .TitleErr }} <p class="error">{{.TitleErr}}</p> {{end}}
+                <br>
+                <input type="text" name="ingredients" class="form-control" value="{{.FormIngredients}}">
+                {{ if .IngredientsErr}}<p class="error">{{.IngredientsErr}}</p> {{end}}
+                <br>
+                <textarea name="description" class="form-control">{{.FormDescription}}</textarea>
+                {{ if .DescriptionErr }} 
+                <p class="error">{{ .DescriptionErr }}</p> 
+                {{ else }} 
+                <p class="help-text">Provide a description of this recipe</p>
+                {{ end }}
+                <br>
+
+                {{.CsrfField}}
+                
+                <input type="submit" value="Submit" class="btn btn-primary" />
+                </form>
+            </div>
+
+        </div>
+        <div class="col-lg-3"></div>
+    </div>
+</div>
+
+
+</div>
+
+{{ template "_footer.html" }}

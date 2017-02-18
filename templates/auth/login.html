@@ -1,0 +1,31 @@
+{{ template "_head.html" .Title}}
+
+
+<div id="app">
+
+<div class="container">
+    <div class="rows">
+        <div class="col-lg-3"></div>
+        <div class="col-lg-6">
+                        <div class="form-group">
+                <form action="/login" method="POST" >
+                    <input type="email" name="email" class="form-control" />
+                    {{ if .Email }} <p class="error">{{ .Email }}</p> {{ end }}
+                    <br>
+                     <input type="password" name="password" placeholder="Password" class="form-control"/>
+                    {{ if .Password }}<p class="error">{{.Password}}</p>{{end}}
+                    <br>
+
+                    {{.CsrfField}}
+                    <input type="submit" value="Submit" class="btn-primary btn" class="btn btn-primary" />
+                </form>
+            </div>
+
+        </div>
+        <div class="col-lg-3"></div>
+    </div>
+</div>
+
+</div>
+
+{{template "_footer.html"}}

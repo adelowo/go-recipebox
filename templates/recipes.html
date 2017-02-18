@@ -1,0 +1,77 @@
+{{template "_head.html" .Title}}
+
+
+<div id="app">
+
+{{ $csrfField := .CsrfField}}
+
+<div class="container">
+    <div class="rows">
+        <div class="col-lg-3"></div>
+        <div class="col-lg-6">
+
+        {{ if .Recipes.Recipes }}
+
+	        <table>
+	        <thead>
+	        	<th>
+	        		Id
+	        	</th>
+	        	<th>
+	        		Title
+	        	</th>
+	        	<th>
+	        		Ingredients
+	        	</th>
+	        	<th>
+	        		Description
+	        	</th>
+	        	</thead>
+	        	        
+        {{ range $index, $element := .Recipes.Recipes }}
+		<tbody>
+
+        	<tr>
+        		<td>
+        			{{$index}}
+        		</td>
+        		<td>
+        			{{.Title}}
+        		</td>
+        		<td>
+        			{{.Ingredients}}
+        		</td>
+        		<td>
+        			{{.Description}}
+        		</td>
+
+        		<td>
+        			<form action="/recipes/{{.Id}}" method="POST">
+        			<input type="submit" name="delete" class="btn btn-danger btn-small" value="Delete this recipe">
+        			{{$csrfField}}
+        			</form>
+        		</td>
+        	</tr>
+        	</tbody>	
+
+        {{ end }}
+
+	    </table>
+
+
+
+        {{else}}
+			<p class="error">
+			    You do not have any recipe. Please <a href="/recipes/create">Create a recipe</a>, then check this page again
+			</p>
+        {{end}}
+
+        </div>
+        <div class="col-lg-3"></div>
+    </div>
+</div>
+
+</div>
+
+
+{{template "_footer.html"}}

@@ -28,6 +28,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		delete(session.Values, "username")
 		delete(session.Values, "active")
+		delete(session.Values, "email")
 		session.Save(r, w)
 	}
 
@@ -91,6 +92,7 @@ func postLogin(w http.ResponseWriter, r *http.Request) {
 
 		sess.Values["username"] = currentUser.Username
 		sess.Values["active"] = true
+		sess.Values["email"] = currentUser.Email
 
 		err := sess.Save(r, w)
 
@@ -213,6 +215,7 @@ func postSignUp(w http.ResponseWriter, r *http.Request) {
 
 	session.Values["username"] = username
 	session.Values["active"] = true
+	session.Values["email"] = email
 
 	//Redirect to the index page
 

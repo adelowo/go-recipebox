@@ -41,19 +41,34 @@ func main() {
 		panic(message)
 	}
 
-	template.ParseTemplates("auth/signup.html", "auth/login.html")
+	template.ParseTemplates("auth/signup.html", "auth/login.html", "index.html", "add_recipe.html")
 
 	r := mux.NewRouter()
 
+	authMiddleware := alice.New(middleware.Auth)
+	guestMiddleware := alice.New(middleware.Guest)
+
 	index := http.HandlerFunc(controller.Index)
 
-	r.Handle("/", alice.New(middleware.Auth).ThenFunc(index)).Methods("GET")
+	r.Handle("/", authMiddleware.ThenFunc(index)).Methods("GET")
 
 	r.HandleFunc("/logout", controller.Logout).Methods("GET")
 
-	r.HandleFunc("/login", controller.Login).Methods("GET", "POST")
+	login := http.HandlerFunc(controller.Login)
 
-	r.HandleFunc("/signup", controller.Signup).Methods("GET", "POST")
+	r.Handle("/login", guestMiddleware.ThenFunc(login)).Methods("GET", "POST")
+
+	signup := http.HandlerFunc(controller.Signup)
+
+	r.Handle("/signup", guestMiddleware.ThenFunc(signup)).Methods("GET", "POST")
+
+	addRecipe := http.HandlerFunc(controller.AddRecipe)
+
+	r.Handle("/recipes/create", authMiddleware.ThenFunc(addRecipe)).Methods("GET")
+
+	saveRecipe := http.HandlerFunc(controller.SaveRecipe)
+
+	r.Handle("/recipes/create", authMiddleware.ThenFunc(saveRecipe)).Methods("POST")
 
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 

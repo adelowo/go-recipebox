@@ -41,7 +41,7 @@ func main() {
 		panic(message)
 	}
 
-	template.ParseTemplates("auth/signup.html", "auth/login.html", "index.html", "add_recipe.html", "recipes.html")
+	template.ParseTemplates("edit_recipe.html", "recipe.html", "auth/signup.html", "auth/login.html", "index.html", "add_recipe.html", "recipes.html")
 
 	r := mux.NewRouter()
 
@@ -73,6 +73,13 @@ func main() {
 	deleteRecipeHandler := authMiddleware.Append(middleware.RecipeOwner).ThenFunc(http.HandlerFunc(controller.DeleteRecipe))
 
 	r.Handle("/recipes/{id:[0-9]+}", deleteRecipeHandler).Methods("POST")
+
+	editHandler := authMiddleware.Append(middleware.RecipeOwner).ThenFunc(controller.EditRecipe)
+
+	r.Handle("/recipes/{id:[0-9]+}/edit", editHandler).Methods("GET", "POST")
+
+	//Even non authenticated users can view recipes
+	r.HandleFunc("/recipes/{id:[0-9]+}", controller.ViewRecipe).Methods("GET")
 
 	r.Handle("/recipes", authMiddleware.ThenFunc(http.HandlerFunc(controller.ShowAllRecipes))).Methods("GET")
 

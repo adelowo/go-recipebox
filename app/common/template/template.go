@@ -16,7 +16,9 @@ var (
 	LoginTemplate,
 	HomeTemplate,
 	CreateRecipeTemplate,
-	AllRecipeTemplate *template.Template
+	AllRecipeTemplate,
+	SingleRecipePage,
+	EditRecipeTemplate *template.Template
 )
 
 func ParseTemplates(templates ...string) {
@@ -50,6 +52,8 @@ func ParseTemplates(templates ...string) {
 	HomeTemplate = lookTemplateUp("index.html")
 	CreateRecipeTemplate = lookTemplateUp("add_recipe.html")
 	AllRecipeTemplate = lookTemplateUp("recipes.html")
+	SingleRecipePage = lookTemplateUp("recipe.html")
+	EditRecipeTemplate = lookTemplateUp("edit_recipe.html")
 
 	templatesParsed = true
 

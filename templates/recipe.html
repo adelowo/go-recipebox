@@ -1,0 +1,24 @@
+{{ template "_head.html" .Title}}
+
+
+<div id="app">
+	<div class="container">
+    <div class="rows">
+        <div class="col-lg-3"></div>
+        <div class="col-lg-6">
+
+        <p>The title of this recipe is <strong>{{.Recipe.Title}}</strong></p>
+        
+        <p>The incregredients for this recipe is/are <strong>{{.Recipe.Ingredients}}</strong></p>
+        <p>
+        	The description for this recipe is <strong>{{.Recipe.Description}}</strong>
+        </p>
+        </div>
+
+        <div class="col-lg-3"></div>
+        </div>
+        </div>
+
+</div>
+
+{{ template "_footer.html" }}

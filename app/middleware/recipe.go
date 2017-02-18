@@ -40,6 +40,7 @@ func RecipeOwner(h http.Handler) http.Handler {
 			}
 
 			if model.IsRecipeOwnedBy(currentUser, recipeId) {
+				r.ParseForm()
 				r.Form.Add("id", id)
 				h.ServeHTTP(w, r)
 				return

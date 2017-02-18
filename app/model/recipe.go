@@ -123,3 +123,20 @@ func DeleteRecipe(id int) error {
 
 	return errors.New("An error occured while we tried deleting your recipe")
 }
+
+func Update(r Recipe, title, description, ingredients string) error {
+
+	stmt, err := database.Db.Preparex("UPDATE recipes SET title=?,description=?, ingredients=? WHERE id=?")
+
+	if err != nil {
+		return err
+	}
+
+	result := stmt.MustExec(title, description, ingredients, r.Id)
+
+	if x, _ := result.RowsAffected(); x == 1 {
+		return nil
+	}
+
+	return errors.New("An error occured while your recipe was being updated")
+}

@@ -5,6 +5,7 @@ import (
 	"github.com/adelowo/RecipeBox/app/common/session"
 	"github.com/adelowo/RecipeBox/app/common/template"
 	"github.com/adelowo/RecipeBox/app/model"
+	"github.com/gorilla/mux"
 	h "html/template"
 	"net/http"
 	"strconv"
@@ -168,4 +169,127 @@ func DeleteRecipe(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "/recipes", http.StatusFound)
 
+}
+
+type singleRecipePage struct {
+	template.Page
+	Recipe model.Recipe
+}
+
+func ViewRecipe(w http.ResponseWriter, r *http.Request) {
+
+	//We don't care about the error value here since we defined a regex to capture only the numerical part of the route
+	//We can thus be certain that there wouldn't be any error.
+	//Am i missing something here ?
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+
+	recipe, err := model.FindRecipeById(id)
+
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	data := singleRecipePage{template.NewPageStruct("View this recipe"), recipe}
+
+	template.SingleRecipePage.Execute(w, data)
+}
+
+func EditRecipe(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method == "POST" {
+		postEditRecipe(w, r)
+		return
+	}
+
+	getEditRecipe(w, r)
+}
+
+func postEditRecipe(w http.ResponseWriter, r *http.Request) {
+
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+
+	recipe, err := model.FindRecipeById(id)
+
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	validationErrorBag := error.NewValidatorErrorBag()
+
+	//Duplication and in some other places though
+
+	r.ParseForm()
+
+	title := r.Form.Get("title")
+
+	ingredients := strings.Trim(r.Form.Get("ingredients"), ",")
+
+	description := r.Form.Get("description")
+
+	if title == "" {
+		validationErrorBag.Add("title", "Please provide a title for your recipe")
+	}
+
+	if ingredients == "" {
+		validationErrorBag.Add("ingredients", "Please provide the ingredients needed to make this recipe")
+	}
+
+	if description == "" {
+		validationErrorBag.Add("description", "Please provide a description for this recipe")
+	}
+
+	if validationErrorBag.Count() != 0 {
+		sendEditRecipeFailure(w, r, validationErrorBag, recipe)
+		return
+	}
+
+	//End duplication. 8)
+
+	err = model.Update(recipe, title, description, ingredients)
+
+	if err != nil {
+		InternalError(w, err)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusFound)
+
+}
+
+func sendEditRecipeFailure(w http.ResponseWriter, r *http.Request, eb *error.ValidatorErrorBag, recipe model.Recipe) {
+	w.WriteHeader(http.StatusFound)
+
+	formData := newFormDataStruct(r.Form.Get("title"), r.Form.Get("description"), r.Form.Get("ingredients"))
+
+	d := withCreateRecipeStruct(getCsrfTemplate(r), template.NewPageStruct("Edit this recipe"), eb, formData)
+
+	data := editPage{recipe, d}
+
+	template.EditRecipeTemplate.Execute(w, data)
+}
+
+func getEditRecipe(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(mux.Vars(r)["id"])
+
+	recipe, err := model.FindRecipeById(id)
+
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	formData := newFormDataStruct(r.Form.Get("title"), r.Form.Get("description"), r.Form.Get("ingredients"))
+
+	d := withCreateRecipeStruct(getCsrfTemplate(r), template.NewPageStruct("Edit this recipe"), error.NewValidatorErrorBag(), formData)
+
+	data := editPage{recipe, d}
+
+	template.EditRecipeTemplate.Execute(w, data)
+}
+
+type editPage struct {
+	Recipe model.Recipe
+	createRecipe
 }

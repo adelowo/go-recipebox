@@ -9,6 +9,7 @@ import (
 	"strconv"
 )
 
+//Middleware to ensure that only the original owner of a recipe can delete it
 func RecipeOwner(h http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

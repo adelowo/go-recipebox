@@ -13,5 +13,12 @@ User story
 - Users can edit recipes.
 
 
+### Setup
+
+```bash
+$ cat schema.sql | sqlite3 recipebox.db
+#if you decide to use another db source other than recipebox.db, update the database key in the config/config.json file.
+```
+
 
 > There currently are no integration tests for this but there are unit tests for wrappers i added. Haven't wrapped my head around the httptest package though.

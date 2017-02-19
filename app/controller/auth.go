@@ -83,6 +83,7 @@ func postLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		validatorErrorBag.Add("password", "Invalid password/email combination")
 		sendLoginFailureResponse(w, r, validatorErrorBag)
+		return
 	}
 
 	bcryptHasher := hasher.NewBcryptHasher()

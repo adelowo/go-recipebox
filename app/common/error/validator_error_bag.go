@@ -35,7 +35,9 @@ func (v ValidatorErrorBag) Has(key string) bool {
 }
 
 func (v ValidatorErrorBag) Reset() {
-	v.Errors = make(map[string]string)
+	for k, _ := range v.Errors {
+		delete(v.Errors, k)
+	}
 }
 
 func NewValidatorErrorBag() *ValidatorErrorBag {

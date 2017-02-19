@@ -3,6 +3,7 @@ package error
 import (
 	"flag"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
 )
@@ -39,17 +40,18 @@ func ExampleValidatorErrorBag_Get() {
 
 	if err != nil {
 		fmt.Println(err)
-		//Output: Key, password does not exist on this bag
 	}
+
+	//Output: Key, password does not exist on this bag
 
 }
 
 func ExampleValidatorErrorBag_Count() {
 
-	//We still have the username key on it
+	validatorErrorBag.Reset()
 
 	fmt.Println(validatorErrorBag.Count())
-	//Output: 1
+	//Output: 0
 }
 
 func ExampleValidatorErrorBag_Has() {
@@ -57,4 +59,33 @@ func ExampleValidatorErrorBag_Has() {
 	exists := validatorErrorBag.Has("password")
 	fmt.Println(exists)
 	//Output: false
+}
+
+func ExampleValidatorErrorBag_Reset() {
+	validatorErrorBag.Reset()
+
+	fmt.Println(validatorErrorBag.Count())
+	//Output: 0
+
+}
+
+func TestValidatorErrorBagHasWorksAsExpected(t *testing.T) {
+
+	validatorErrorBag.Reset()
+
+	assert.Exactly(t, 0, validatorErrorBag.Count(), "ValidatorErrorBag should contain no elements")
+
+	validatorErrorBag.Add("lanre", "Used to be a PHPer. Go has sold me")
+
+	assert.False(t, validatorErrorBag.Has("password"), "ValidatorErrorBag should not have the password key")
+
+	val, err := validatorErrorBag.Get("lanre")
+
+	if err != nil {
+		assert.FailNow(t, "Error should be nil")
+	}
+
+	assert.Equal(t, "Used to be a PHPer. Go has sold me", val, "Go didn't sell me ?")
+
+	assert.Equal(t, 1, validatorErrorBag.Count(), "The validatorErrorBag should contain only one key")
 }
